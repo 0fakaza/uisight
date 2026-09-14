@@ -34,9 +34,7 @@ import { offerInstall } from './install-browser.mjs';
 
 // Live artifacts live under the user's home — never inside the package (npx → node_modules).
 const LIVE_DIR = join(homedir(), '.uisight', 'live');
-const MARKS_DIR = join(LIVE_DIR, 'marks');
-const READ_DIR = join(MARKS_DIR, 'read');
-for (const d of [LIVE_DIR, MARKS_DIR, READ_DIR]) mkdirSync(d, { recursive: true });
+mkdirSync(LIVE_DIR, { recursive: true });
 
 // --- Arguments ---
 const argv = process.argv.slice(2);
@@ -77,6 +75,16 @@ if (hedef.error) {
 targetUrl = hedef.url;
 
 const PORT = Number(process.env.UISIGHT_PORT || process.env.MOBILQA_PORT || arg('--port', 5055));
+
+// Everything a panel writes is keyed by its port, like the token already was.
+// The frame, the inspect dump and the marks queue used to share one folder
+// across every panel on the machine -- so with two projects open, a note a
+// person pinned on one reached the agent working on the other, and the
+// "last-mobile.jpg" an agent was told to read belonged to whichever panel had
+// drawn a frame most recently. Reported from a round with several panels up.
+const MARKS_DIR = join(LIVE_DIR, `marks-${PORT}`);
+const READ_DIR = join(MARKS_DIR, 'read');
+for (const d of [MARKS_DIR, READ_DIR]) mkdirSync(d, { recursive: true });
 checkPort(PORT);
 checkForUpdate();            // arka planda, beklenmez
 // Tam sayfa goruntusunun tavani (Claude'da ~ genislik*yukseklik/750 token).
@@ -326,7 +334,7 @@ function handleFrame(o, b64) {
   const t = Date.now();
   if (t - o.lastWrite > 1000) {
     o.lastWrite = t;
-    try { writeFileSync(join(LIVE_DIR, `last-${o.id}.jpg`), Buffer.from(b64, 'base64')); } catch {}
+    try { writeFileSync(join(LIVE_DIR, `last-${PORT}-${o.id}.jpg`), Buffer.from(b64, 'base64')); } catch {}
   }
 }
 
@@ -728,7 +736,7 @@ async function applyAction(g) {
           results.push({ session: o.id, device: o.deviceKey, error: String(e).slice(0, 200) });
         }
       }
-      writeFileSync(join(LIVE_DIR, 'inspect.json'), JSON.stringify(results, null, 2), 'utf8');
+      writeFileSync(join(LIVE_DIR, `inspect-${PORT}.json`), JSON.stringify(results, null, 2), 'utf8');
       return { ok: true, results };
     }
 
@@ -761,7 +769,7 @@ async function applyAction(g) {
       const paths = {};
       const targets = g.session ? [sessions.get(g.session)].filter(Boolean) : [...sessions.values()];
       for (const o of targets) {
-        const path = join(LIVE_DIR, `last-${o.id}.jpg`);
+        const path = join(LIVE_DIR, `last-${PORT}-${o.id}.jpg`);
         await o.page.screenshot({ path: path, type: 'jpeg', quality: 90, scale: 'css', fullPage: !!g.full });
         paths[o.id] = path;
       }
@@ -1294,7 +1302,7 @@ const PANEL_HTML_SABLON = `<!doctype html><html lang="en"><head><meta charset="u
       parts.push('<h4>' + esc(s.label || s.session) + '</h4>' + p.join('') + (li.length ? '<ul>' + li.join('') + '</ul>' : ''));
     }
     document.getElementById('finding').innerHTML = parts.join('');
-    toast('done — live/inspect.json updated');
+    toast('done — live/inspect-${PORT}.json updated');
   }
 </script></body></html>`;
 
@@ -1314,7 +1322,7 @@ server.listen(PORT, '127.0.0.1', () => {
   const address = `http://localhost:${PORT}`;
   console.log(`\n  Live panel : ${address}`);
   console.log(`  Target      : ${state.url}  (theme: ${state.theme})`);
-  console.log(`  AI access   : MCP tools (see_screen/inspect/marks) or ${join(LIVE_DIR, 'last-mobile.jpg')}`);
+  console.log(`  AI access   : MCP tools (see_screen/inspect/marks) or ${join(LIVE_DIR, `last-${PORT}-mobile.jpg`)}`);
   console.log(`  Antigravity/VS Code: Ctrl+Shift+P -> "Simple Browser: Show" -> ${address}\n`);
   if (!NO_OPEN) openInBrowser(address);
 });
