@@ -20,14 +20,32 @@ yorumlar ayrışmıyor.
 
 ## Yayın komutları
 
+npm oturumu arada düşüyor. Önce kontrol et; düşmüşse `npm login`'i **tek başına** çalıştır:
+
 ```powershell
-cd c:\dev\uisight
-npm publish                                    # 2FA tarayıcıda onaylanır
-.\.tools\mcp-publisher.exe login github; if ($?) { .\.tools\mcp-publisher.exe publish }
+npm whoami        # "sololabs" yazmalı; E401 ise önce: npm login
 ```
 
-MCP kaydının token'ı bir saat kadar sonra düşüyor; `login` her seferinde
-komutun içinde olmalı, ayrı çalıştırılırsa ikinci kez 401 alınır.
+Yayın — **tek satır olarak** yapıştır:
+
+```powershell
+cd c:\dev\uisight; npm publish; if ($?) { .\.tools\mcp-publisher.exe login github; if ($?) { .\.tools\mcp-publisher.exe publish } }
+```
+
+Üç tuzak (14 Eyl 2026'da üçüne de düşüldü):
+
+- **Komutları alt alta ayrı satırlar hâlinde yapıştırma.** `npm login` / `npm publish` "Press ENTER" diye
+  beklerken yapıştırılan bir sonraki satır o soruya cevap olarak gidiyor: npm `cd c:\dev\uisight` satırını
+  kullanıcı adı sanıp girişi iptal etti, ardından `whoami` 401, `publish` 404 zincirleme geldi. Tek satırda
+  `;` ile zincirlenince arada basılan ENTER doğrudan npm'e gider, `if ($?)` de npm başarısızsa MCP'yi atlar.
+- **MCP adımı 400 "version '0.x.y' was not found" verirse kod hatası değil.** Kayıt npm'i yayından hemen sonra
+  doğruluyor, npm ise "birkaç dakika sürebilir" diyor. Bir dakika bekleyip yalnız
+  `.\.tools\mcp-publisher.exe publish` yeterli — giriş token'ı yerinde, yeniden `login` gerekmez.
+- **MCP token'ı bir saat kadar sonra düşüyor;** uzun aradan sonra `login` komutun içinde olmalı, yoksa 401.
+
+Ajan kabuğundan: `npm publish` yapılamıyor — 2FA bağlantısı araç çıktısında `***` olarak gizleniyor ve npm,
+etkileşimsiz kabukta onay beklemeden EOTP ile çıkıyor. MCP `publish` ise kullanıcı `login` olduktan sonra
+ajan kabuğundan çalışıyor (token makinede).
 
 Open VSX (bu makineden yapılabiliyor, token dosyada):
 
@@ -52,15 +70,9 @@ yol olarak sayılıyor.
 
 ## Henüz kayıtlı olmadığımız yerler
 
-- **Open VSX doğrulama rozeti** — namespace `sololabstr` var, PAT yayımlayabiliyor
-  (erişim var) ama `verified:false` (sahiplik yok). Talep AÇILDI 5 Eyl:
-  https://github.com/EclipseFdn/open-vsx.org/issues/13032 — Option 1 kanıtıyla
-  (Marketplace yayıncısı + package.json'ın işaret ettiği depo aynı organizasyona
-  ait). 🔴 Şablon talebi yapan hesapta 12 ay kamuya açık geçmiş istiyor;
-  `yusufcemres` 25 Mart 2026 açılışlı, yani 5,4 aylık. O kutu işaretlenmedi,
-  gerekçe issue'da açıkça yazıldı. Reddedilirse Mart 2027'de tekrar.
 - **mcp.so** — gönderildi 5 Eyl: https://github.com/chatmcp/mcpso/issues/3955
-  (şablon yok, serbest biçim; kabul görmüş bir gönderi örnek alındı).
+  (şablon yok, serbest biçim; kabul görmüş bir gönderi örnek alındı). 14 Eyl
+  itibarıyla hâlâ AÇIK, yorum yok.
 - **Smithery** — güncel belgelerde `smithery.yaml` HİÇ geçmiyor; üç yayın türü
   var: hosted, external (URL) ve stdio için **MCPB paketi**. Depodaki dosya eski
   `startCommand` biçiminde, çalışıp çalışmadığı doğrulanmadı — silinmedi ama
@@ -77,6 +89,26 @@ yol olarak sayılıyor.
 - **glama.ai/mcp** ve `punkpeye/awesome-mcp-servers` (PR) — düşük maliyetli iki
   vitrin daha, henüz yapılmadı.
 
-## Sayılar (5 Eylül 2026)
+## Kapananlar
 
-Open VSX 1.130 indirme · npm haftalık 168 · GitHub 102 yıldız · yorum 0.
+- ✅ **Open VSX doğrulama rozeti** — namespace `sololabstr` artık `verified:true`; talep
+  [#13032](https://github.com/EclipseFdn/open-vsx.org/issues/13032) KAPANDI (14 Eyl'de görüldü). Option 1
+  kanıtıyla açılmıştı: Marketplace yayıncısı ve `package.json`'ın işaret ettiği depo aynı organizasyonda.
+  Şablonun "talep eden hesapta 12 ay kamuya açık geçmiş" kutusu işaretlenmemişti (`yusufcemres` 25 Mart 2026
+  açılışlı); gerekçe issue'da açıkça yazılmıştı ve engel olmadı.
+
+## Sayılar
+
+14 Eylül 2026 — sürümler: npm + MCP kaydı **0.32.0**, Open VSX + VS Code Marketplace **1.7.2**.
+
+| Kanal | 14 Eyl | 5 Eyl |
+|---|---|---|
+| npm `uisight` | haftalık 1.134 · aylık 4.097 | haftalık 168 |
+| npm sarmalayıcılar (aylık) | mcp 177 · panel 153 · audit 129 | — |
+| Open VSX | 1.674 indirme · yorum 0 | 1.130 |
+| VS Code Marketplace | 7 kurulum · 1 puan (5★) | — |
+| GitHub | 127 yıldız · 10 fork · 0 açık issue | 102 yıldız |
+| dev.to yazısı | 0 tepki · 0 yorum | — |
+
+🔴 npm sayısını dış kullanım sanma: `/app-hazirlik` her projede `npx uisight` koşuyor ve sarmalayıcı kurulumları
+ana paketi ikinci kez sayıyor. Dış kullanımın daha temiz sinyali Open VSX indirmesi ile GitHub yıldızı.
