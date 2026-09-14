@@ -33,3 +33,25 @@ Fix partisi D (PR: hz/k5-uisight) — token kontrastı, nav etiketleri, dokunma 
 8. Git Bash `--path` ilk yolu sessiz düşürüyor; aynı dakikada aynı klasör adı → önceki rapor eziliyor (saniye ekle); `last-mobile.jpg` paneller arası ortak.
 9. Headless'ta `BarcodeDetector` yok → kamera sayfaları her zaman fallback dalına düşer (gerçek cihaz gerekir; rapora "cihazda doğrula" etiketi).
 10. **Kök-neden gruplaması:** aynı token'dan türeyen 65 ihlal tek satır olmalı ("`--gayb-red` 3.72:1 → 65 örnek") — fix maliyetini doğru gösterir.
+
+## E. Karar — uisight oturumu, 14 Eyl 2026 (0.32.0)
+
+Kural: iki projede tekrar eden kontrol olur; düz hata tekrar beklemez. Kontrol değişikliği gerçek sayfalarda
+önce/sonra ölçülmeden girmez.
+
+| # | Madde | Durum | Gerekçe / ölçüm |
+|---|---|---|---|
+| 1 | Kapalı akordiyon FP | BEKLİYOR | Tek proje, ikinci sayfada ölçülmedi |
+| 2 | Gradient zemin FP | **YAPILDI** | Kök sebep gradient değil, metnin altındaki absolute kardeş / `::before` katmanı. Katman araması: 7 canlı sitede redios 5→0, noben 5→4, paladyn 4→4, dördü değişmedi. 14 "görünmez" bulgunun 6'sı yanlış alarmdı, 8'i gerçek |
+| 3 | Sabit nav katlama-metni FP | BEKLİYOR | Tek proje |
+| 4 | Dark tema piksel-aynı → tek satır | **YAPILDI** | Peyle'de tekrar etti (17 renk × 2 cihaz, değişen 0) |
+| 5 | Dev-mode artefaktları (Next "N") | BEKLİYOR | Peyle dev sunucusunda rozet açıkken TEKRAR ETMEDİ |
+| 6 | Panel `inspect`'te konsol yok | BEKLİYOR | Tek proje |
+| 7 | signIn: telefon + onay kutusu + OTP | ADAY | Fiko'nun `tokenEndpoint` maddesiyle aynı aile ("reçete bu girişi yapamıyor") ama farklı alanlar — reçete genişletmesi olarak ayrı iş |
+| 8 | Aynı dakika klasör ezme · `last-mobile.jpg` ortak · Git Bash `--path` | **YAPILDI** (düz hata) | Klasör saniye + atomik. Ortak dosya sandığımdan genişti: `inspect.json` ve **işaret klasörü** de ortakmış (bir projedeki not diğer projenin ajanına gidiyordu) — hepsi porta bağlandı. `--path` aslında konsola uyarı basıyordu ama rapora girmiyordu → artık raporda ölçülmemiş ekran |
+| 9 | Headless'ta `BarcodeDetector` yok | BEKLİYOR | Tek proje |
+| 10 | Kök-neden gruplaması (token başına tek satır) | BEKLİYOR | Tek proje; değeri yüksek |
+
+**Yeni gözlem (aday):** kokart'ın dönen hero maketi — aynı motor, sayfanın hangi slaytta olduğuna göre 6 ya da 11
+düşük kontrast buluyor. Animasyonlu içerikte ölçüm belirlenimci değil. Eski ve yeni motor aynı sayfa durumunda her
+örnekte birebir aynı sonucu verdi, yani kod değişikliğiyle ilgisi yok.
