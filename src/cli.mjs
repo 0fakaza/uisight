@@ -365,6 +365,14 @@ export const INSPECTION_SCRIPT = (settings) => {
   const gradientColors = (bi) =>
     [...String(bi).matchAll(/(?:rgba?|oklab|oklch|lab|lch|hsla?|hwb|color)\([^()]*\)/g)]
       .map((m) => rgb(m[0])).filter(Boolean);
+  /** One average for a gradient's colour stops. There were two copies of this
+   *  arithmetic -- the ancestor walk and the layer search each had their own. */
+  const gradyanOrtalama = (bi) => {
+    const d = gradientColors(bi);
+    if (!d.length) return null;
+    const top = d.reduce((a, c) => ({ r: a.r + c.r, g: a.g + c.g, b: a.b + c.b, a: a.a + c.a }), { r: 0, g: 0, b: 0, a: 0 });
+    return { r: top.r / d.length, g: top.g / d.length, b: top.b / d.length, a: top.a / d.length };
+  };
 
   /** The element's REAL backdrop: collects semi-transparent layers (bg-white/15 and
    *  friends) downward and alpha-BLENDS them — treating 15% white as solid white is
@@ -380,11 +388,8 @@ export const INSPECTION_SCRIPT = (settings) => {
       if (bi && bi !== 'none') {
         if (bi.includes('url(')) return null; // a real image background — not measurable
         if (bi.includes('gradient')) {
-          const d = gradientColors(bi);
-          if (d.length) {
-            const t = d.reduce((a, c) => ({ r: a.r + c.r, g: a.g + c.g, b: a.b + c.b, a: a.a + c.a }), { r: 0, g: 0, b: 0, a: 0 });
-            layers.push({ r: t.r / d.length, g: t.g / d.length, b: t.b / d.length, a: t.a / d.length });
-          }
+          const ort = gradyanOrtalama(bi);
+          if (ort) layers.push(ort);
         }
       }
       const bg = rgb(s.backgroundColor);
@@ -401,6 +406,155 @@ export const INSPECTION_SCRIPT = (settings) => {
     let result = base;
     for (let i = layers.length - 1; i >= 0; i--) result = blend(layers[i], result);
     return result;
+  };
+
+  /**
+   * What is actually painted under a piece of text when it is not the text's
+   * ancestors.
+   *
+   * effectiveBackground walks up the DOM, and heroes are rarely built that way:
+   * the photo and its gradient sit in an absolutely positioned sibling, or in a
+   * ::before on the section, and every ancestor of the copy is transparent down
+   * to a near-white page. Probed element by element on three live sites, that
+   * was six of fourteen invisible-text findings -- five on redios.tr, white copy
+   * over a photograph reported at 1.03:1, and a blue button on noben built from
+   * an absolute layer. The other eight were real and stay: 10% black watermark
+   * numerals, faint step digits on white.
+   *
+   * Consulted only once the ancestor walk has already produced a failure, so it
+   * can correct or silence a finding but never invent one. Returns null when a
+   * photo, video or canvas is underneath (not measurable from CSS, so say
+   * nothing), undefined when nothing is layered underneath (the ancestor result
+   * stands), and otherwise the colour the layers composite to.
+   *
+   * Geometric, not elementsFromPoint: several of the real overlays are
+   * pointer-events:none, and elementsFromPoint does not return those at all.
+   */
+  let konumluKatmanlar = null;
+  const zSirasi = (s) => { const z = parseInt(s.zIndex, 10); return Number.isNaN(z) ? 0 : z; };
+  const MEDYA = /^(IMG|VIDEO|CANVAS|PICTURE)$/;
+  const katmanliArkaPlan = (el) => {
+    if (!konumluKatmanlar) {
+      konumluKatmanlar = [];
+      for (const n of document.querySelectorAll('body *')) {
+        const s = getComputedStyle(n);
+        if (s.position !== 'absolute' && s.position !== 'fixed') continue;
+        if (parseFloat(s.opacity) <= 0.05 || s.visibility === 'hidden' || s.display === 'none') continue;
+        const renk = rgb(s.backgroundColor);
+        const boyali = MEDYA.test(n.tagName) || (s.backgroundImage && s.backgroundImage !== 'none') || (renk && renk.a > 0.01);
+        if (boyali) konumluKatmanlar.push(n);
+      }
+    }
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const SONRA = Node.DOCUMENT_POSITION_FOLLOWING;
+    // Below the copy, not over it. A positioned layer that comes later in the
+    // DOM paints on top of the text -- that is a covering, which other checks
+    // report. One that comes earlier paints underneath only if the text, or an
+    // ancestor of it short of their common one, is positioned too, or if the
+    // layer sits at a negative z-index.
+    const altinda = (n) => {
+      const ns = getComputedStyle(n);
+      if (el.contains(n)) return zSirasi(ns) < 0;
+      if (!(n.compareDocumentPosition(el) & SONRA)) return false;
+      if (zSirasi(ns) < 0) return true;
+      for (let a = el; a && !a.contains(n); a = a.parentElement) {
+        const as = getComputedStyle(a);
+        if (as.position !== 'static' && zSirasi(as) >= zSirasi(ns)) return true;
+      }
+      return false;
+    };
+    const alttakiler = konumluKatmanlar.filter((n) => {
+      if (n === el || n.contains(el)) return false;
+      const q = n.getBoundingClientRect();
+      if (cx < q.left || cx > q.right || cy < q.top || cy > q.bottom) return false;
+      return altinda(n);
+    }).sort((a, b) => (a.compareDocumentPosition(b) & SONRA ? 1 : -1));   // closest to the copy first
+    const kaynaklar = alttakiler.map((n) => ({ s: getComputedStyle(n), medya: MEDYA.test(n.tagName) }));
+    let sozdeSahibi = null;
+    // An ancestor's ::before / ::after -- the other common way to lay a hero.
+    for (let n = el.parentElement; n && n !== document.documentElement; n = n.parentElement) {
+      for (const ps of ['::before', '::after']) {
+        const s = getComputedStyle(n, ps);
+        if (s.content === 'none' || (s.position !== 'absolute' && s.position !== 'fixed')) continue;
+        if (ps === '::after' && zSirasi(s) >= 0) continue;   // without a negative z-index an ::after paints over the copy
+        kaynaklar.push({ s, medya: false });
+        if (!sozdeSahibi) sozdeSahibi = n;
+      }
+    }
+    if (!kaynaklar.length) return undefined;
+
+    // What lies between the copy and those layers: the text's own background,
+    // then its ancestors', up to the element the layers live in.
+    //
+    // Opaque there means the layers are hidden and the ancestor measurement was
+    // right all along. The first version of this skipped that and reached
+    // straight past it: a white avatar initial on its own amber circle came back
+    // as white on the pale card behind the circle, 1.26:1 "invisible", when the
+    // honest number is white on amber at about 2:1.
+    //
+    // Translucent there means it tints what is below, and goes on top of the
+    // composite. On noben's frosted-glass badge that glass is only 1-8% white,
+    // so it barely moves the number; the change there came from the layer
+    // itself -- the old walk measured the card's blue gradient (3.65:1) instead
+    // of the near-black screen actually under the badge (4.03:1).
+    let kapsayici = null;
+    if (alttakiler.length) {
+      for (let a = el; a; a = a.parentElement) if (a.contains(alttakiler[0])) { kapsayici = a; break; }
+    } else kapsayici = sozdeSahibi;
+    const ustKatmanlar = [];
+    for (let a = el; a && a !== kapsayici; a = a.parentElement) {
+      const s = getComputedStyle(a);
+      const bi = s.backgroundImage;
+      if (bi && bi !== 'none') {
+        if (bi.includes('url(')) return undefined;
+        if (bi.includes('gradient')) {
+          const ort = gradyanOrtalama(bi);
+          if (ort) {
+            if (ort.a >= 0.99) return undefined;
+            ustKatmanlar.push(ort);
+          }
+        }
+      }
+      const bg = rgb(s.backgroundColor);
+      if (bg && bg.a > 0.01) {
+        if (bg.a >= 0.99) return undefined;
+        ustKatmanlar.push(bg);
+      }
+    }
+    const katmanlar = [];
+    let taban = null;
+    for (const { s, medya } of kaynaklar) {
+      if (medya) return null;
+      const bi = s.backgroundImage;
+      if (bi && bi !== 'none') {
+        if (bi.includes('url(')) return null;
+        if (bi.includes('gradient')) {
+          const ort = gradyanOrtalama(bi);
+          if (ort) {
+            if (ort.a >= 0.99) { taban = ort; break; }
+            katmanlar.push(ort);
+          }
+        }
+      }
+      const bg = rgb(s.backgroundColor);
+      if (bg && bg.a > 0.01) {
+        if (bg.a >= 0.99) { taban = bg; break; }
+        katmanlar.push(bg);
+      }
+    }
+    if (!taban) {
+      if (!katmanlar.length && !ustKatmanlar.length) return undefined;
+      // Only translucent layers found: they land on the container the layers
+      // live in, and on whatever is outside it.
+      taban = effectiveBackground(kapsayici || el);
+      if (!taban) return null;
+    }
+    let sonuc = taban;
+    for (let i = katmanlar.length - 1; i >= 0; i--) sonuc = blend(katmanlar[i], sonuc);
+    for (let i = ustKatmanlar.length - 1; i >= 0; i--) sonuc = blend(ustKatmanlar[i], sonuc);
+    return sonuc;
   };
   const isVisible = (el) => {
     const r = el.getBoundingClientRect();
@@ -525,14 +679,20 @@ export const INSPECTION_SCRIPT = (settings) => {
 
     const on = rgb(st.color);
     if (!on) continue;
-    const bgc = effectiveBackground(el);
+    let bgc = effectiveBackground(el);
     if (!bgc) continue; // photo background — not measurable, yanlis alarm uretme
-    const blendedFg = on.a < 1 ? blend(on, bgc) : on;
-    const k = contrast(blendedFg, bgc);
     const fs = parseFloat(st.fontSize) || 16;
     const isBold = parseInt(st.fontWeight, 10) >= 700;
     const isLargeText = fs >= 24 || (fs >= 18.66 && isBold);
     const threshold = isLargeText ? 3 : 4.5;
+    let k = contrast(on.a < 1 ? blend(on, bgc) : on, bgc);
+    if (k < threshold) {
+      // A failure measured against the ancestors only. Before it is reported,
+      // look at what is really painted underneath -- see katmanliArkaPlan.
+      const katmanli = katmanliArkaPlan(el);
+      if (katmanli === null) continue;               // a photo underneath: not measurable
+      if (katmanli) { bgc = katmanli; k = contrast(on.a < 1 ? blend(on, bgc) : on, bgc); }
+    }
     const record = { sel: describe(el), text, ratio: Math.round(k * 100) / 100, color: hex(on), bg: hex(bgc), fontSize: `${Math.round(fs)}px` };
     if (k < 1.6) result.invisibleText.push(record);        // pratikte okunmuyor
     else if (k < threshold) result.lowContrast.push({ ...record, threshold });
@@ -1345,12 +1505,26 @@ async function main() {
 
 async function tur(o) {
   const host = new URL(o.url).host.replace(/[^a-z0-9.-]/gi, '_');
-  const time = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+  const time = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
   // Watch mode keeps one folder: the browser page stays on the same address and refreshes itself.
   // Outputs go to the USER's cwd — never into the package dir (npx installs land in node_modules).
   const outRoot = join(process.cwd(), 'uisight-outputs');
-  const outDir = o.watch ? join(outRoot, `_watch-${host}`) : join(outRoot, `${host}-${time}`);
-  mkdirSync(outDir, { recursive: true });
+  // Seconds, and a suffix when even that collides. Minutes were not enough: two
+  // runs in the same minute wrote into one folder and the second report replaced
+  // the first without a word. The leaf is created without `recursive`, which
+  // fails when it exists, so two runs started at the same instant cannot both
+  // decide one name is free.
+  mkdirSync(outRoot, { recursive: true });
+  let outDir = o.watch ? join(outRoot, `_watch-${host}`) : join(outRoot, `${host}-${time}`);
+  if (o.watch) mkdirSync(outDir, { recursive: true });
+  else {
+    for (let n = 2; ; n++) {
+      try { mkdirSync(outDir); break; } catch (e) {
+        if (e.code !== 'EEXIST') throw e;
+        outDir = join(outRoot, `${host}-${time}-${n}`);
+      }
+    }
+  }
 
   const records = [];
   const engineCache = {};
@@ -1417,6 +1591,11 @@ async function tur(o) {
         if (/^[A-Za-z]:[\\/]/.test(path) || /^\/[A-Za-z]:/.test(path)) {
           console.log(`  ! path "${path}" looks like a Windows file path, not a URL path.`);
           console.log('    Git Bash rewrote it. Re-run with MSYS_NO_PATHCONV=1, or quote as "//".');
+          // A console warning scrolls away in a long run, and the report then
+          // simply had one screen fewer than was asked for. It goes into the
+          // report as its own unmeasured screen.
+          records.push({ device: key, label: p.label, engine: engineName, theme, path, url: path, console: [], network: [],
+            error: `not measured — Git Bash rewrote this path into "${path}"; re-run with MSYS_NO_PATHCONV=1` });
           continue;
         }
         const target = new URL(path, o.url).toString();
@@ -1611,6 +1790,8 @@ async function tur(o) {
   if (o.theme.length > 1) {
     lines.push('## Theme comparison (light ↔ dark)');
     let temaBulgu = 0;
+    const temaBaslik = lines.length;
+    const baglanmamis = [];
     for (const device of o.device) {
       for (const path of o.path) {
         const l = records.find((k) => k.device === device && k.theme === 'light' && k.path === path);
@@ -1619,6 +1800,8 @@ async function tur(o) {
 
         const darkMap = new Map(d.inspection.themeSignature.map((x, i) => [`${i}|${x.sel}`, x]));
         const frozen = [];
+        let degisen = 0;
+        let olculen = 0;
         l.inspection.themeSignature.forEach((x, i) => {
           const es = darkMap.get(`${i}|${x.sel}`);
           if (!es) return;
@@ -1627,17 +1810,31 @@ async function tur(o) {
           // old spelling here would silently stop excluding them, and every
           // transparent element would start reporting as theme-frozen.
           const zeminSaydam = / 0%$/.test(x.bg);
-          if (x.color === es.color && x.bg === es.bg && !zeminSaydam) {
+          if (zeminSaydam) return;
+          olculen++;
+          if (x.color === es.color && x.bg === es.bg) {
             frozen.push({ sel: x.sel, text: x.text, color: x.color, bg: x.bg });
-          }
+          } else degisen++;
         });
 
+        // Nothing moved at all: the page has no dark theme, rather than a handful
+        // of hard-coded colours. Listing every element once per device then
+        // reads as that many defects when it is one decision -- a RediOS round
+        // and Peyle both printed the same 17 elements once for each device.
+        if (frozen.length >= 3 && degisen === 0) {
+          temaBulgu++;
+          baglanmamis.push({ yer: `${device} · ${path}`, adet: olculen });
+          continue;
+        }
         if (frozen.length) {
           temaBulgu++;
           lines.push(`- **${device} · ${path}** — ${frozen.length} elements IDENTICAL in both themes (likely hard-coded colors):`);
           for (const s of frozen.slice(0, 10)) lines.push(`  - \`${s.sel}\` "${s.text}" — text ${s.color} / bg ${s.bg}`);
         }
       }
+    }
+    if (baglanmamis.length) {
+      lines.splice(temaBaslik, 0, `- **Dark theme is not wired up** — nothing changed between light and dark on ${baglanmamis.map((b) => b.yer).join(', ')} (${Math.max(...baglanmamis.map((b) => b.adet))} coloured elements compared). One decision, so one line: listing every element per device would read as that many defects.`);
     }
     if (!temaBulgu) lines.push('- No theme-frozen elements found.');
     lines.push('');

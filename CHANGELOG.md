@@ -2,7 +2,7 @@
 
 ## 0.32.0 — 2026-09-14
 
-The two sizes Android now forces, its system bars, and one scale for both screens.
+The sizes Android now forces, what is really painted under text, one scale for both screens, and panels and reports that stop losing things.
 
 **Landscape and foldable profiles.** Android 16 ignores an app's orientation,
 aspect-ratio and resizability restrictions on any display whose smallest side is
@@ -45,6 +45,51 @@ sizing the card to the frame, under a global border-box, took 20px of padding
 out of each frame — proportionally far more for the phone. Measured at three
 window widths: one row, one scale to within rounding, and 1184:339 against a
 true 1440:412.
+
+**Photographs and layers under text were measured as a white page.** The
+contrast checks walked only up the DOM, and heroes are rarely built that way:
+the photo and its gradient sit in an absolutely positioned sibling or a
+`::before`, and every ancestor of the copy is transparent down to a near-white
+page. Raised by a RediOS field round, then probed element by element on three
+live sites: of fourteen "invisible text" findings, six were that — five on
+redios.tr, white copy over a photograph reported at 1.03:1, and a blue button on
+noben built from an absolute layer and reported as white on white. The other
+eight were real and stay: watermark numerals at 10% black, faint step digits on
+white.
+
+A failing measurement is now checked against what is actually painted beneath
+it before it is reported. A photo, video or canvas silences it, since it cannot
+be measured from CSS. A gradient or colour layer replaces the backdrop, and the
+backgrounds between the copy and that layer — the text's own included — are
+composited on top. The search is geometric rather than `elementsFromPoint`,
+because several real overlays are `pointer-events:none` and would never be
+returned. It runs only on a measurement that has already failed, so it can
+correct or silence a finding and cannot invent one.
+
+Measured before and after on seven live sites: redios.tr 5 → 0 invisible,
+noben 5 → 4, paladyn 4 → 4, the other four unchanged. Two things along the way
+are worth writing down. The first version reached straight past an avatar
+initial's own opaque circle and reported a new false "invisible" on paladyn; the
+text's own background now stops the search. And a jump on kokart turned out to
+be its rotating hero mockup, not the code — run against the same page state, the
+old and new engines agreed on every sample, 11 with the calendar slide showing
+and 6 without.
+
+**Every file a panel writes is kept to its own port.** The token always was. The
+last frame, the inspect dump and the marks queue were not: all panels on the
+machine shared one folder for them, so with two projects open a note a person
+pinned on one reached the agent working on the other, and the `last-mobile.jpg`
+an agent was pointed at belonged to whichever panel had drawn most recently.
+
+**Reports that were quietly less than the truth.** An output folder named to the
+minute let a second run in the same minute replace the first run's report; it is
+named to the second now, and created so that two runs started at the same
+instant cannot claim one name. A path Git Bash had rewritten was skipped with a
+console line that scrolled away; it now appears in the report as an unmeasured
+screen with the fix beside it. And a page with no dark theme at all printed the
+same frozen elements once per device — seventeen of them, twice, on one real
+page — which reads as a pile of defects when it is one decision; that is one
+line now, naming every device it applies to.
 
 ## 0.31.0 — 2026-09-05
 
