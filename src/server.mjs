@@ -1219,8 +1219,11 @@ const PANEL_HTML_SABLON = `<!doctype html><html lang="en"><head><meta charset="u
       if (!pane) { pane = paneOlustur(o); kap.appendChild(pane); }
       // Life size, and never past it. The frame is captured below 1:1 to keep
       // its token cost down, so filling the card would blow a 320px capture up
-      // to whatever the side bar is wide -- measured at 2.5x, which makes a
-      // 44px touch target look like 110px. Judging a phone layout from that is
+      // to whatever the side bar is wide -- a 412px phone measured at 792px, nearly
+      // twice life size, so a 44px touch target looked like about 85px. (An
+      // earlier note here said 2.5x; that compared against the screencast
+      // frame's compressed pixel width, not the phone's real size.) Judging a
+      // phone layout from that is
       // worse than not seeing it.
       if (o.viewport && o.viewport.width) pane.style.setProperty('--vp', o.viewport.width + 'px');
       olcekleriEsitle();

@@ -93,12 +93,14 @@ line now, naming every device it applies to.
 
 ## 0.31.0 — 2026-09-05
 
-The phone in the side bar was drawn two and a half times life size.
+The phone in the side bar was drawn nearly twice life size.
 
 Frames are captured below 1:1 to keep their token cost down, and the card filled
 whatever width the side bar had. Measured: a 412px capture drawn at 792px in an
-820px side bar, and 2.5x on a smaller capture. The blur is the lesser problem —
-a 44px touch target looks like 110px there, so the one view whose whole purpose
+820px side bar — nearly twice the phone's real width. (This entry first said
+2.5x and 110px: that compared against the screencast frame's compressed pixels,
+not the phone's real size.) The blur is the lesser problem — a 44px touch target
+looks like about 85px there, so the one view whose whole purpose
 is judging a phone layout was quietly lying about it. Reported by someone
 looking at the panel and saying the mobile screen looked wrong.
 

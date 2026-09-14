@@ -73,7 +73,7 @@ That one had a second edge, worth saying out loud. The docs pointed at a name no
 
 I could not have found the rest by running anything. Someone opened the panel and said the mobile screen looked wrong.
 
-It did. Frames are captured below 1:1 to keep their token cost down, and the card filled whatever width the side bar had. A 412px capture was being drawn at 792px. The blur is the lesser problem: **a 44px touch target looks like 110px there**. The one view whose entire purpose is judging a phone layout was quietly lying about it.
+It did. Frames are captured below 1:1 to keep their token cost down, and the card filled whatever width the side bar had. A 412px phone was being drawn at 792px — nearly twice its real size. The blur is the lesser problem: **a 44px touch target looks like 85px there**. The one view whose entire purpose is judging a phone layout was quietly lying about it.
 
 ![Before and after, same side bar and same capture: on the left the phone frame stretched to 792px, on the right capped at the device width of 412px](https://raw.githubusercontent.com/sololabstr/uisight/main/docs/assets/frame-scale.png)
 

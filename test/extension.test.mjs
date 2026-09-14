@@ -353,8 +353,10 @@ test('the switcher does not reuse a glyph the panel already binds to something e
 test('the side bar never blows a phone frame up past life size', () => {
   // The frame is captured below 1:1 to keep its token cost down, and the card
   // filled the side bar's width, so a 412px capture was drawn at 792px in a
-  // wide side bar — measured 2.5x on a 320px one. A 44px touch target looks
-  // like 110px there, which is worse than not seeing the phone at all.
+  // wide side bar — nearly twice the phone's real size. A 44px touch target
+  // looks like about 85px there, which is worse than not seeing the phone at
+  // all. (A 2.5x figure once written here measured the screencast frame's
+  // compressed pixels, not the phone's real width.)
   assert.match(server, /pane\.style\.setProperty\('--vp'/,
     'the card must carry its session viewport, or CSS has nothing to cap against');
   assert.match(server, /body\.narrow \.tel img \{[^}]*max-width:min\(100%, var\(--vp/,
