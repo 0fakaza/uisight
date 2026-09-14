@@ -1,6 +1,6 @@
 # uisight — nerede yayında
 
-Son güncelleme: 5 Eylül 2026
+Son güncelleme: 15 Eylül 2026
 
 ## Paketler ve mağazalar
 
@@ -96,6 +96,17 @@ yol olarak sayılıyor.
   kanıtıyla açılmıştı: Marketplace yayıncısı ve `package.json`'ın işaret ettiği depo aynı organizasyonda.
   Şablonun "talep eden hesapta 12 ay kamuya açık geçmiş" kutusu işaretlenmemişti (`yusufcemres` 25 Mart 2026
   açılışlı); gerekçe issue'da açıkça yazılmıştı ve engel olmadı.
+
+## Duyurular
+
+| Tarih | Kanal | Ne | Not |
+|---|---|---|---|
+| 5 Eyl 2026 | dev.to (`yusufcemres`) | "I pointed my UI-auditing tool at three sites… all seven bugs were its own" | Kaynağı `docs/blog/2026-09-05-seven-bugs.md`. 🔴 Yayındaki metin "110px" diyordu; doğrusu 85px (telefon 1,9 kat çiziliyordu) — dev.to'da elle düzeltilmeli, depo kopyası düzeltildi (`3baaf5a`). |
+| 15 Eyl 2026 | LinkedIn (kişisel profil) | SoloLabs ürün tanıtım serisi: "Yapay zekâ ekranı görür. uisight ölçer." | Görsel `docs/assets/social/uisight-linkedin-urun.png` (kokart.app canlı panel ölçümü). Bağlantılar ilk yorumda: Marketplace, Open VSX, GitHub, dev.to. |
+
+Sıradaki (karar verildi, sıra bu): r/mcp ve r/vscode → Show HN en son. Dış gönderim her biri için ayrı onayla.
+
+`docs/assets/social/uisight-linkedin-olcek.png` — önce/sonra (412 → 792 px, "1,9 katı") karşılaştırması; ikinci görsel ya da ayrı gönderi için hazır.
 
 ## Sayılar
 
