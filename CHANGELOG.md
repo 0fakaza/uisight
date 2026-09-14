@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.32.0 — 2026-09-14
+
+The two sizes Android now forces, its system bars, and one scale for both screens.
+
+**Landscape and foldable profiles.** Android 16 ignores an app's orientation,
+aspect-ratio and resizability restrictions on any display whose smallest side is
+600dp or more, and Android 17 removes the temporary opt-out. So a portrait-only
+phone app will be seen landscape and at tablet width whether it asked to be or
+not — and nothing here had ever measured those sizes. Two new profiles:
+`pixel-landscape` (863x360, Playwright's own numbers, which corrected ours) and
+`foldable` (700x1000, inside the 600-840dp band the rule keys on). The request
+came from Play uploads and repeated across three projects. On a real PWA it
+earned itself at once: in landscape the site opens its desktop nav and four
+links come back 20px tall — links that live inside a hamburger in portrait and
+had never been measured.
+
+**Android system bars.** The notch check now covers Android too, with a
+different gate. iOS only draws under the notch when the page asks for
+`viewport-fit=cover`; Android from targetSdk 35 draws the app edge-to-edge
+whether it asked or not. So the question is whether the page can become an app,
+and a web app manifest answers it. Ordinary websites sit below the browser's own
+chrome, never meet a system bar, and stay quiet — the test holds that as firmly
+as the finding.
+
+**Two false alarms the wider viewport walked into.** A giant watermark word
+bleeding past a footer was reported as clipped text; it is aria-hidden and
+pointer-events:none, and the check now asks. And small-text findings were the
+fourth place building their own label, so a star rating came back with a
+newline inside it. Routing them through the shared label builder first turned
+"4.8 (4)" into "4.8 ( 4 )"; it now takes innerText and cuts icon names out of it
+afterwards, bounded by whitespace so an icon called `add` cannot take a bite out
+of "Adres".
+
+**One scale for both screens in the panel.** Each card was fitted on its own, so
+a 1440px desktop landed at 0.61 of life size beside a 412px phone at 0.88 — the
+phone drawn nearly one and a half times larger per CSS pixel than the desktop it
+was being compared with. Reported from a screenshot as "the sizes look wrong".
+Getting to one scale took three attempts, each wrong in a way worth writing
+down: reading the container's width let the scale feed itself (it settled at
+0.158 and stopped answering the window); splitting the row evenly handed the
+phone as much room as the desktop and dragged the scale down for both; and
+sizing the card to the frame, under a global border-box, took 20px of padding
+out of each frame — proportionally far more for the phone. Measured at three
+window widths: one row, one scale to within rounding, and 1184:339 against a
+true 1440:412.
+
 ## 0.31.0 — 2026-09-05
 
 The phone in the side bar was drawn two and a half times life size.
