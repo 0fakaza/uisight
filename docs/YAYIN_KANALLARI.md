@@ -101,10 +101,19 @@ yol olarak sayılıyor.
 
 | Tarih | Kanal | Ne | Not |
 |---|---|---|---|
-| 5 Eyl 2026 | dev.to (`yusufcemres`) | "I pointed my UI-auditing tool at three sites… all seven bugs were its own" | Kaynağı `docs/blog/2026-09-05-seven-bugs.md`. 🔴 Yayındaki metin "110px" diyordu; doğrusu 85px (telefon 1,9 kat çiziliyordu) — dev.to'da elle düzeltilmeli, depo kopyası düzeltildi (`3baaf5a`). |
+| 5 Eyl 2026 | dev.to (`yusufcemres`) | "I pointed my UI-auditing tool at three sites… all seven bugs were its own" | Kaynağı `docs/blog/2026-09-05-seven-bugs.md`. İlk yayın "110px" diyordu; doğrusu 85px (telefon 1,9 kat çiziliyordu). Depo kopyası `3baaf5a`'da, dev.to'daki metin 15 Eyl'de elle düzeltildi. |
 | 15 Eyl 2026 | LinkedIn (kişisel profil) | SoloLabs ürün tanıtım serisi: "Yapay zekâ ekranı görür. uisight ölçer." | Görsel `docs/assets/social/uisight-linkedin-urun.png` (kokart.app canlı panel ölçümü). Bağlantılar ilk yorumda: Marketplace, Open VSX, GitHub, dev.to. |
+| 15 Eyl 2026 01:30 | Reddit r/mcp | "I built an MCP server that measures UI instead of guessing from screenshots. The first seven bugs it found were its own." — https://www.reddit.com/r/mcp/comments/1wgidpu/ | 🔴 **"Reddit'teki filtreler tarafından kaldırıldı"** (paylaşımdan hemen sonra). Mod'lara mesaj da gitmedi: "You can't message that user" → hesap düzeyi kısıt (yeni/az karma/e-posta doğrulanmamış). Gönderi SİLİNMEDİ, mod kuyruğunda bekliyor. |
 
-Sıradaki (karar verildi, sıra bu): r/mcp ve r/vscode → Show HN en son. Dış gönderim her biri için ayrı onayla.
+Reddit taslakları: `docs/duyurular/reddit/` (r-mcp, r-claudeai, r-vscode; görsel yerleri `>>> [GÖRSEL n] <<<` satırlarında; kopyası `Desktop\uisight-reddit\`). Yapıştırma: Markdown düzenleyici + satırı silip görsel simgesiyle yükle.
+
+### ⏭️ 16 Eyl'de bakılacak
+
+1. r/mcp gönderisi onaylandı mı (bağlantıyı aç; "kaldırıldı" yazısı kalktı mı).
+2. Reddit hesabı: e-posta doğrulandı mı (Ayarlar → Hesap) · karma ve hesap yaşı (profil). Kısıt buysa r/ClaudeAI ve r/vscode'a **gönderme**; önce bir-iki hafta ilgili topluluklarda bağlantısız, gerçek yardım yorumu. Aynı gönderiyi yeniden atma, yeni hesap açma.
+3. Reddit'ten bağımsız, karma istemeyen vitrinler: **glama.ai/mcp** kaydı + **punkpeye/awesome-mcp-servers** PR'ı (u/punkpeye aynı zamanda r/mcp modu — PR'ı Reddit onayı için arka kapı olarak KULLANMA). Göndermeden önce kullanıcıya göster.
+
+Sıra (değişmedi): r/mcp → r/ClaudeAI → r/vscode → Show HN en son. Dış gönderim her biri için ayrı onayla.
 
 `docs/assets/social/uisight-linkedin-olcek.png` — önce/sonra (412 → 792 px, "1,9 katı") karşılaştırması; ikinci görsel ya da ayrı gönderi için hazır.
 
