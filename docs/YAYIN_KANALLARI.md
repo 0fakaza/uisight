@@ -86,8 +86,13 @@ yol olarak sayılıyor.
   paket 12-15 MB civarı beklenir; tarayıcılar dahil değil, ilk çalıştırma
   indirmesi yine geçerli. Tahmini yarım gün: manifest, `mcpb` CLI ile paketleme,
   gerçek bir kurulum denemesi, sürümde üreten CI adımı.
-- **glama.ai/mcp** ve `punkpeye/awesome-mcp-servers` (PR) — düşük maliyetli iki
-  vitrin daha, henüz yapılmadı.
+- `punkpeye/awesome-mcp-servers` (PR) — 15 Eyl'de listede YOK doğrulandı (ham README 1,6 MB;
+  GitHub contents API 1 MB üstünü boş döndürür, oradan "yok" okunmaz). Hedef bölüm **Browser
+  Automation**, `softvoyagers/pageshot-api` ile `SolveGate/solvegate-mcp` arası; satır biçimi
+  `- [owner/repo](github) [![glama rozeti](…/badges/score.svg)](glama) 📇 🏠 - açıklama`. Ajan
+  PR'ı başlık sonuna `🤖🤖🤖` ekleyince hızlı birleştiriliyor (CONTRIBUTING). Gönderim kullanıcı onayıyla.
+- ✅ **glama.ai/mcp** — ayrıca kayıt gerekmedi, GitHub'dan kendiliğinden dizinlenmiş:
+  https://glama.ai/mcp/servers/sololabstr/uisight (15 Eyl: not B, rozet çalışıyor).
 
 ## Kapananlar
 
@@ -107,11 +112,16 @@ yol olarak sayılıyor.
 
 Reddit taslakları: `docs/duyurular/reddit/` (r-mcp, r-claudeai, r-vscode; görsel yerleri `>>> [GÖRSEL n] <<<` satırlarında; kopyası `Desktop\uisight-reddit\`). Yapıştırma: Markdown düzenleyici + satırı silip görsel simgesiyle yükle.
 
-### ⏭️ 16 Eyl'de bakılacak
+**15 Eyl 16:40 durum:** gönderi 15 saat sonra hâlâ "filtreler tarafından kaldırıldı", mod onayı yok. Profil: **karma 1 · Reddit yaşı 1 hafta** → sebep kesin hesap güveni. Buradan otomatik okunamıyor (Reddit girişsiz 403; agent-reach Windows Uygulama Denetimi'nde engelli) — durum kullanıcının ekranından okunur.
+
+✅ **glama.ai zaten dizinde:** https://glama.ai/mcp/servers/sololabstr/uisight (GitHub'dan kendiliğinden, lisans notu A). Ayrı kayıt gerekmiyor.
+
+### ⏭️ Bakılacaklar (16 Eyl'den itibaren)
 
 1. r/mcp gönderisi onaylandı mı (bağlantıyı aç; "kaldırıldı" yazısı kalktı mı).
 2. Reddit hesabı: e-posta doğrulandı mı (Ayarlar → Hesap) · karma ve hesap yaşı (profil). Kısıt buysa r/ClaudeAI ve r/vscode'a **gönderme**; önce bir-iki hafta ilgili topluluklarda bağlantısız, gerçek yardım yorumu. Aynı gönderiyi yeniden atma, yeni hesap açma.
-3. Reddit'ten bağımsız, karma istemeyen vitrinler: **glama.ai/mcp** kaydı + **punkpeye/awesome-mcp-servers** PR'ı (u/punkpeye aynı zamanda r/mcp modu — PR'ı Reddit onayı için arka kapı olarak KULLANMA). Göndermeden önce kullanıcıya göster.
+3. Reddit'ten bağımsız vitrinler: glama.ai ✅ zaten dizinde. **punkpeye/awesome-mcp-servers** PR'ı hazır, kullanıcı onayı bekliyor: `docs/duyurular/awesome-mcp-servers.md` (u/punkpeye aynı zamanda r/mcp modu; PR'ı Reddit onayı için arka kapı olarak KULLANMA).
+4. Reddit hesabı (15 Eyl: karma 1, 1 haftalık): r/mcp, r/ClaudeAI, r/ClaudeCode, r/PWA gibi yerlerde bağlantısız, gerçek yardım yorumu. Karma birkaç düzineyi, hesap 2-4 haftayı bulunca r/ClaudeAI taslağıyla yeniden dene.
 
 Sıra (değişmedi): r/mcp → r/ClaudeAI → r/vscode → Show HN en son. Dış gönderim her biri için ayrı onayla.
 
